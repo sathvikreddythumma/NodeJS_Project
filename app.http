@@ -1,0 +1,10 @@
+POST http://localhost:3000/create_user
+Content-Type: application/json
+
+{
+  "full_name": "Bob Doe",
+  "mob_num": "+911234567891",
+  "pan_num": "abcde1234f",
+  "manager_id": 2
+}
+###
