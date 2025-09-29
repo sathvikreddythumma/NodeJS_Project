@@ -53,10 +53,10 @@ const initializeDBAndServer = async () => {
     INSERT INTO managers (manager_id,is_active) VALUES (4,"false");
     `
     //const getQuery = `delete from managers where manager_id=4`
-    // const getQueryUser = `select * from users`
-    // const booksArray = await db.all(getQueryUser)
-    // // //response.send(booksArray)
-    // console.log(booksArray)
+    const getQueryUser = `select * from users`
+    const booksArray = await db.all(getQueryUser)
+    // //response.send(booksArray)
+    console.log(booksArray)
 
     // 1.1 Create User Endpoint
     app.post('/create_user', async (req, res) => {
@@ -91,8 +91,7 @@ const initializeDBAndServer = async () => {
         const now = new Date().toISOString()
         const insertSql = `
       INSERT INTO users (user_id, full_name, mob_num, pan_num, manager_id, created_at, updated_at, is_active)
-      VALUES ("${user_id}", "${full_name}", "${validatedMobile}", "${validatedPan}", ${manager_id}, "${now}", "${now}", 1)
-    `
+      VALUES ("${user_id}", "${full_name}", "${validatedMobile}", "${validatedPan}", ${manager_id}, "${now}", "${now}", 1)`
         const r1 = await db.run(insertSql)
         if (!r1) {
           res.status(500).json({
@@ -108,6 +107,131 @@ const initializeDBAndServer = async () => {
         }
       }
     })
+
+    // 1.2 Get Users Endpoint:
+    app.post('/get_users', async (req, res) => {
+      const {user_id, mob_num, manager_id} = req.body
+
+      let sql = 'SELECT * FROM users'
+      let params = []
+
+      if (user_id) {
+        sql += ' WHERE user_id = ?'
+        params.push(user_id)
+      } else if (mob_num) {
+        sql += ' WHERE mob_num = ?'
+        params.push(mob_num)
+      } else if (manager_id) {
+        sql += ' WHERE manager_id = ?'
+        params.push(manager_id)
+      }
+
+      const r2 = await db.all(sql, params, (err, rows) => {
+        if (err) {
+          return res
+            .status(500)
+            .json({error: 'Database error', details: err.message})
+        }
+      })
+      if (r2) {
+        // Return the users in a JSON object
+        res.json({users: rows || []})
+      }
+    })
+
+    // 1.3 Delete User Endpoint:
+    app.post('/delete_user', async (req, res) => {
+      const {user_id, mob_num} = req.body
+
+      if (!user_id && !mob_num) {
+        res.status(400).json({error: 'user_id or mob_num is required'})
+      }
+
+      let sql = 'DELETE FROM users WHERE'
+      let params = []
+
+      if (user_id) {
+        sql += ' user_id = ?'
+        params.push(user_id)
+      }
+      if (mob_num) {
+        if (params.length > 0) {
+          sql += ' OR'
+        }
+        sql += ' mob_num = ?'
+        params.push(mob_num)
+      }
+
+      const r3 = await db.run(sql, params, function (err) {
+        if (err) {
+          return res
+            .status(500)
+            .json({error: 'Database error', details: err.message})
+        }
+
+        if (this.changes === 0) {
+          return res.status(404).json({message: 'User not found'})
+        }
+
+        res.json({message: 'User deleted successfully'})
+      })
+    })
+
+    // 1.4 Update User Endpoint:
+    app.post('/update_user', (req, res) => {
+  const { user_ids, update_data } = req.body;
+
+  if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
+    return res.status(400).json({ error: 'user_ids must be a non-empty array' });
+  }
+  if (!update_data || Object.keys(update_data).length === 0) {
+    return res.status(400).json({ error: 'update_data must be provided' });
+  }
+
+  // Basic validations
+  if (update_data.full_name && update_data.full_name.trim() === '') {
+    return res.status(400).json({ error: 'full_name must not be empty' });
+  }
+
+  if (update_data.mob_num) {
+    const validMob = validateMobileNumber(update_data.mob_num);
+    if (!validMob) return res.status(400).json({ error: 'Invalid mobile number' });
+    update_data.mob_num = validMob;
+  }
+
+  if (update_data.pan_num) {
+    const validPan = validatePan(update_data.pan_num);
+    if (!validPan) return res.status(400).json({ error: 'Invalid PAN number' });
+    update_data.pan_num = validPan;
+  }
+
+  // Prepare fields & params for SQL
+  const fields = [];
+  const values = [];
+
+  for (const key in update_data) {
+    fields.push(`${key} = ?`);
+    values.push(update_data[key]);
+  }
+
+  values.push(new Date().toISOString()); // updated_at timestamp
+  const placeholders = fields.length > 0 ? fields.join(', ') + ', updated_at = ?' : 'updated_at = ?';
+
+  // Use IN clause with user_ids for WHERE condition
+  const sql = `UPDATE users SET ${placeholders} WHERE user_id IN (${user_ids.map(() => '?').join(', ')})`;
+  values.push(...user_ids);
+
+  db.run(sql, values, function(err) {
+    if (err) {
+      return res.status(500).json({ error: 'Database error', details: err.message });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ message: 'No users updated' });
+    }
+    res.json({ message: `${this.changes} user(s) updated successfully` });
+  });
+});
+
 
     const PORT = process.env.PORT || 3000
     app.listen(PORT, () => {
