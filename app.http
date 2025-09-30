@@ -23,8 +23,8 @@ POST http://localhost:3000/delete_user
 Content-Type: application/json
 
 {
-  "user_id": "947da05f-e424-483c-b725-357c051c8cea",
-  "mob_num": "1234567890"
+  "user_id": "7d5d4c63-a979-43a5-a030-ea16b33637ff",
+  "mob_num": "1234567893"
 
 }
 ###
@@ -33,12 +33,12 @@ POST http://localhost:3000/update_user
 Content-Type: application/json
 
 {
-   "user_ids": ["uuid-v4", "uuid-v4"],
+   "user_ids": ["e7a75956-99b1-4841-a421-e8fe2956ea37","39e248d5-c7da-4ace-940e-3723fbecc1fc"],
   "update_data": {
-    "full_name": "Jane Doe",
-    "mob_num": "0987654321",
-    "pan_num": "FGHIJ6789K",
-    "manager_id": "uuid-v4"
+    "full_name": "Ceaser Doe",
+    "mob_num": "+911234567892",
+    "pan_num": "abcde1236f",
+    "manager_id": 3
   }
 }
 ###
