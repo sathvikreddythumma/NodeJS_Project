@@ -126,16 +126,17 @@ const initializeDBAndServer = async () => {
         params.push(manager_id)
       }
 
-      const r2 = await db.all(sql, params, (err, rows) => {
+      const r2 = await db.all(sql, params, err => {
         if (err) {
-          return res
-            .status(500)
-            .json({error: 'Database error', details: err.message})
+          return res.status(500).json({
+            error: 'Database error',
+            details: err.message,
+          })
         }
       })
       if (r2) {
         // Return the users in a JSON object
-        res.json({users: rows || []})
+        res.json({users: r2 || []})
       }
     })
 
@@ -144,7 +145,9 @@ const initializeDBAndServer = async () => {
       const {user_id, mob_num} = req.body
 
       if (!user_id && !mob_num) {
-        res.status(400).json({error: 'user_id or mob_num is required'})
+        res.status(400).json({
+          error: 'user_id or mob_num is required',
+        })
       }
 
       let sql = 'DELETE FROM users WHERE'
@@ -164,74 +167,86 @@ const initializeDBAndServer = async () => {
 
       const r3 = await db.run(sql, params, function (err) {
         if (err) {
-          return res
-            .status(500)
-            .json({error: 'Database error', details: err.message})
+          return res.status(500).json({
+            error: 'Database error',
+            details: err.message,
+          })
         }
-
-        if (this.changes === 0) {
-          return res.status(404).json({message: 'User not found'})
-        }
-
-        res.json({message: 'User deleted successfully'})
       })
+      if (r3.changes === 0) {
+        res.status(404).json({
+          message: 'User not found',
+        })
+      } else {
+        res.json({message: 'User deleted successfully'})
+      }
     })
 
     // 1.4 Update User Endpoint:
     app.post('/update_user', (req, res) => {
-  const { user_ids, update_data } = req.body;
+      const {user_ids, update_data} = req.body
 
-  if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
-    return res.status(400).json({ error: 'user_ids must be a non-empty array' });
-  }
-  if (!update_data || Object.keys(update_data).length === 0) {
-    return res.status(400).json({ error: 'update_data must be provided' });
-  }
+      if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
+        return res
+          .status(400)
+          .json({error: 'user_ids must be a non-empty array'})
+      }
+      if (!update_data || Object.keys(update_data).length === 0) {
+        return res.status(400).json({error: 'update_data must be provided'})
+      }
 
-  // Basic validations
-  if (update_data.full_name && update_data.full_name.trim() === '') {
-    return res.status(400).json({ error: 'full_name must not be empty' });
-  }
+      // Basic validations
+      if (update_data.full_name && update_data.full_name.trim() === '') {
+        return res.status(400).json({error: 'full_name must not be empty'})
+      }
 
-  if (update_data.mob_num) {
-    const validMob = validateMobileNumber(update_data.mob_num);
-    if (!validMob) return res.status(400).json({ error: 'Invalid mobile number' });
-    update_data.mob_num = validMob;
-  }
+      if (update_data.mob_num) {
+        const validMob = validateMobileNumber(update_data.mob_num)
+        if (!validMob)
+          return res.status(400).json({error: 'Invalid mobile number'})
+        update_data.mob_num = validMob
+      }
 
-  if (update_data.pan_num) {
-    const validPan = validatePan(update_data.pan_num);
-    if (!validPan) return res.status(400).json({ error: 'Invalid PAN number' });
-    update_data.pan_num = validPan;
-  }
+      if (update_data.pan_num) {
+        const validPan = validatePan(update_data.pan_num)
+        if (!validPan)
+          return res.status(400).json({error: 'Invalid PAN number'})
+        update_data.pan_num = validPan
+      }
 
-  // Prepare fields & params for SQL
-  const fields = [];
-  const values = [];
+      // Prepare fields & params for SQL
+      const fields = []
+      const values = []
 
-  for (const key in update_data) {
-    fields.push(`${key} = ?`);
-    values.push(update_data[key]);
-  }
+      for (const key in update_data) {
+        fields.push(`${key} = ?`)
+        values.push(update_data[key])
+      }
 
-  values.push(new Date().toISOString()); // updated_at timestamp
-  const placeholders = fields.length > 0 ? fields.join(', ') + ', updated_at = ?' : 'updated_at = ?';
+      values.push(new Date().toISOString()) // updated_at timestamp
+      const placeholders =
+        fields.length > 0
+          ? fields.join(', ') + ', updated_at = ?'
+          : 'updated_at = ?'
 
-  // Use IN clause with user_ids for WHERE condition
-  const sql = `UPDATE users SET ${placeholders} WHERE user_id IN (${user_ids.map(() => '?').join(', ')})`;
-  values.push(...user_ids);
+      // Use IN clause with user_ids for WHERE condition
+      const sql = `UPDATE users SET ${placeholders} WHERE user_id IN (${user_ids
+        .map(() => '?')
+        .join(', ')})`
+      values.push(...user_ids)
 
-  db.run(sql, values, function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error', details: err.message });
-    }
-    if (this.changes === 0) {
-      return res.status(404).json({ message: 'No users updated' });
-    }
-    res.json({ message: `${this.changes} user(s) updated successfully` });
-  });
-});
-
+      db.run(sql, values, function (err) {
+        if (err) {
+          return res
+            .status(500)
+            .json({error: 'Database error', details: err.message})
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({message: 'No users updated'})
+        }
+        res.json({message: `${this.changes} user(s) updated successfully`})
+      })
+    })
 
     const PORT = process.env.PORT || 3000
     app.listen(PORT, () => {

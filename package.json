@@ -1,0 +1,26 @@
+{
+  "name": "nodejs_project",
+  "version": "1.0.0",
+  "description": "User Management",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sathvikreddythumma/NodeJS_Project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sathvikreddythumma/NodeJS_Project/issues"
+  },
+  "homepage": "https://github.com/sathvikreddythumma/NodeJS_Project#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "uuid": "8"
+  }
+}

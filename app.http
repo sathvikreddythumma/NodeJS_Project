@@ -2,10 +2,10 @@ POST http://localhost:3000/create_user
 Content-Type: application/json
 
 {
-  "full_name": "Bob Doe",
-  "mob_num": "+911234567891",
-  "pan_num": "abcde1234f",
-  "manager_id": 2
+  "full_name": "Ceaser Doe",
+  "mob_num": "+911234567892",
+  "pan_num": "abcde1236f",
+  "manager_id": 3
 }
 ###
 
@@ -13,7 +13,7 @@ POST http://localhost:3000/get_users
 Content-Type: application/json
 
 {
-   "user_id": "42677e14-7e7b-4008-a8a8-aae0b0b332e8",
+  "user_id": "42677e14-7e7b-4008-a8a8-aae0b0b332e8",
   "mob_num": "1234567890",
   "manager_id": 1
 }
@@ -23,7 +23,7 @@ POST http://localhost:3000/delete_user
 Content-Type: application/json
 
 {
-  "user_id": "42677e14-7e7b-4008-a8a8-aae0b0b332e8",
+  "user_id": "947da05f-e424-483c-b725-357c051c8cea",
   "mob_num": "1234567890"
 
 }
